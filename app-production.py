@@ -5,8 +5,10 @@ import numpy as np
 import pickle
 import base64
 from gevent.pywsgi import WSGIServer
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 # Load the pre-trained models
 with open('one_hand_model.pkl', 'rb') as f:

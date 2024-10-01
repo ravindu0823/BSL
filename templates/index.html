@@ -42,8 +42,8 @@
         // Convert the canvas to a data URL (base64)
         const dataURL = canvas.toDataURL("image/jpeg");
 
-        // Send the frame to the Flask server for prediction
-        fetch("/predict", {
+        // Update the URL to point to your deployed model's API
+        fetch("http://167.99.78.82:5000/predict", {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
