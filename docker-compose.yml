@@ -1,0 +1,9 @@
+services:
+  python-flask:
+    container_name: python-flask-container
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: ravindu0823/bsd:1.0.0
+    ports:
+      - "5000:5000"

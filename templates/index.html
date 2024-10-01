@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Real-Time Hand Gesture Prediction</title>
+    <style>
+      video {
+        width: 640px;
+        height: 480px;
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Real-Time Hand Gesture Prediction</h2>
+    <video id="video" autoplay></video>
+    <p>Prediction: <span id="prediction">Loading...</span></p>
+
+    <script>
+      const video = document.getElementById("video");
+      const predictionDisplay = document.getElementById("prediction");
+
+      // Access the user's webcam
+      navigator.mediaDevices
+        .getUserMedia({ video: true })
+        .then((stream) => {
+          video.srcObject = stream;
+        })
+        .catch((err) => {
+          console.error("Error accessing the camera", err);
+        });
+
+      // Send the video frame to the server every 200ms
+      setInterval(() => {
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext("2d");
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Convert the canvas to a data URL (base64)
+        const dataURL = canvas.toDataURL("image/jpeg");
+
+        // Send the frame to the Flask server for prediction
+        fetch("/predict", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: "image=" + encodeURIComponent(dataURL),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            predictionDisplay.textContent = data.prediction;
+          })
+          .catch((err) => {
+            console.error("Error in prediction request", err);
+          });
+      }, 200); // Sending frames every 200 milliseconds (adjust as needed)
+    </script>
+  </body>
+</html>
