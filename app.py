@@ -4,8 +4,10 @@ import mediapipe as mp
 import numpy as np
 import pickle
 import base64
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 # Load the pre-trained models
 with open('one_hand_model.pkl', 'rb') as f:
@@ -43,32 +45,41 @@ def home():
 # Endpoint to handle frame predictions
 @app.route('/predict', methods=['POST'])
 def predict():
-    img_data = request.form['image']
-    
-    # Decode the base64 image
-    img_data = base64.b64decode(img_data.split(',')[1])  # Split the data from base64 encoding
-    npimg = np.frombuffer(img_data, np.uint8)
-    img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
+    try:
+        img_data = request.form['image']
+        print(f"Received image data: {img_data[:50]}...")  # Log part of the base64 string for debugging
 
-    # Process the image
-    landmarks_list = image_processed(img)
+        # Check if the image data has the base64 prefix (e.g., 'data:image/jpeg;base64,')
+        if img_data.startswith('data:image'):
+            img_data = img_data.split(',')[1]  # Remove the prefix, keep the base64 part
 
-    if len(landmarks_list) == 0:
-        return jsonify({'prediction': 'No hands detected'})
+        # Decode the base64 image
+        img_data = base64.b64decode(img_data)
+        npimg = np.frombuffer(img_data, np.uint8)
+        img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
 
-    # Select the model based on the number of hands detected
-    if len(landmarks_list) == 1:
-        model = one_hand_model
-        data = np.array(landmarks_list[0]).reshape(1, -1)
-    elif len(landmarks_list) == 2:
-        model = two_hand_model
-        data = np.concatenate(landmarks_list[:2]).reshape(1, -1)
-    
-    # Predict the output
-    y_pred = model.predict(data)
-    prediction = str(y_pred[0])
+        # Process the image
+        landmarks_list = image_processed(img)
 
-    return jsonify({'prediction': prediction})
+        if len(landmarks_list) == 0:
+            return jsonify({'prediction': 'No hands detected'})
+
+        # Select the model based on the number of hands detected
+        if len(landmarks_list) == 1:
+            model = one_hand_model
+            data = np.array(landmarks_list[0]).reshape(1, -1)
+        elif len(landmarks_list) == 2:
+            model = two_hand_model
+            data = np.concatenate(landmarks_list[:2]).reshape(1, -1)
+
+        # Predict the output
+        y_pred = model.predict(data)
+        prediction = str(y_pred[0])
+
+        return jsonify({'prediction': prediction})
+
+    except Exception as e:
+        return jsonify({'error': 'Failed to process image', 'details': str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
