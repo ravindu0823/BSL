@@ -4,6 +4,6 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    image: ravindu0823/bsd:1.0.0
+    image: ravindu0823/bsd:1.1.0
     ports:
       - "5000:5000"

@@ -84,10 +84,23 @@ def predict():
 
         # Predict the output
         y_pred = model.predict(data)
-        # prediction = str(y_pred[0])
-        prediction = str(y_pred[0]).replace(" ", "")[0]
+        prediction = str(y_pred[0])
 
-        return jsonify({'prediction': prediction})
+        # Extract the meaningful part (number or letter)
+        if '-' in prediction:  # If prediction is in the form of "Word - symbol"
+            # Get the second part and strip whitespace
+            symbol = prediction.split('-')[1].strip()
+        else:
+            symbol = prediction.strip()  # Just in case there's no '-'
+
+        # Check if symbol is a digit or a letter
+        if symbol.isdigit():
+            result = symbol  # If it's a number, return the digit
+        else:
+            # If it's a letter, return the uppercase letter
+            result = prediction.split('-')[0].strip()
+
+        return jsonify({'prediction': result})
 
     except Exception as e:
         return jsonify({'error': 'Failed to process image', 'details': str(e)}), 500
